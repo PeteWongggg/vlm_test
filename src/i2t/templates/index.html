@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <title>多模态图生文 Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color-scheme: light dark;
+      }
+      body {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 16px;
+        line-height: 1.5;
+      }
+      h1 {
+        font-size: 1.8rem;
+      }
+      form {
+        display: grid;
+        gap: 16px;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 12px;
+        padding: 24px;
+      }
+      label {
+        font-weight: 600;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        font-size: 0.95rem;
+        border-radius: 8px;
+        padding: 12px;
+      }
+      input[type="file"] {
+        padding: 8px 0;
+      }
+      button {
+        width: 180px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: none;
+        background: #2563eb;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+      #result {
+        margin-top: 32px;
+        padding: 24px;
+        border-radius: 12px;
+        background: rgba(37, 99, 235, 0.08);
+        white-space: pre-wrap;
+      }
+      #stats {
+        margin-top: 12px;
+        font-size: 0.95rem;
+        color: #555;
+      }
+      .error {
+        color: #dc2626;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>多模态图生文 · {{ model_name }}</h1>
+    <p>支持 PNG / JPEG / SVG，所有推理均在同一后端接口调用。</p>
+
+    <form id="uploadForm">
+      <div>
+        <label for="prompt">提示词</label>
+        <textarea id="prompt" name="prompt">{{ default_prompt }}</textarea>
+      </div>
+      <div>
+        <label for="file">上传图片</label>
+        <input id="file" name="file" type="file" accept=".png,.jpg,.jpeg,.svg" required />
+      </div>
+      <div>
+        <button type="submit">触发推理</button>
+      </div>
+      <div class="error" id="error"></div>
+    </form>
+
+    <section id="result" hidden></section>
+    <div id="stats"></div>
+
+    <script>
+      const form = document.getElementById("uploadForm");
+      const resultBox = document.getElementById("result");
+      const statsBox = document.getElementById("stats");
+      const errorBox = document.getElementById("error");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        errorBox.textContent = "";
+        resultBox.hidden = true;
+        statsBox.textContent = "";
+
+        const submitBtn = form.querySelector("button");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "推理中...";
+
+        const formData = new FormData(form);
+
+        try {
+          const response = await fetch("/api/generate", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.detail || "推理失败");
+          }
+
+          const data = await response.json();
+          resultBox.textContent = data.content?.trim() || "无返回内容";
+          resultBox.hidden = false;
+
+          const usage = data.usage || {};
+          statsBox.textContent =
+            `输入 Token: ${usage.prompt_tokens ?? "-"} · ` +
+            `输出 Token: ${usage.completion_tokens ?? "-"} · ` +
+            `总计: ${usage.total_tokens ?? "-"} · ` +
+            `延迟: ${data.latency?.toFixed(2) ?? "-"}s`;
+        } catch (err) {
+          errorBox.textContent = err.message;
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "触发推理";
+        }
+      });
+    </script>
+  </body>
+</html>
+
+
