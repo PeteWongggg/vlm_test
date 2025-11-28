@@ -1,4 +1,11 @@
 """Config package providing YAML-based settings loader."""
 
-from .config import load_config, AppConfig, ModelConfig, AppMeta  # noqa: F401
+from .config import (
+    load_config,
+    AppConfig,
+    ModelConfig,
+    AppMeta,
+    OpenRouterConfig,
+    OpenRouterModel,
+)  # noqa: F401
 

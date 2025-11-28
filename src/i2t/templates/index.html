@@ -28,6 +28,14 @@
       label {
         font-weight: 600;
       }
+      select {
+        width: 100%;
+        font-size: 0.95rem;
+        border-radius: 8px;
+        padding: 12px;
+        border: 1px solid #ccc;
+        background: white;
+      }
       textarea {
         width: 100%;
         min-height: 120px;
@@ -71,10 +79,20 @@
     </style>
   </head>
   <body>
-    <h1>多模态图生文 · {{ model_name }}</h1>
-    <p>支持 PNG / JPEG / SVG，所有推理均在同一后端接口调用。</p>
+    <h1>多模态图生文</h1>
+    <p>支持 PNG / JPEG / SVG，可选择本地模型或通过 OpenRouter 访问其他 VLM 模型。</p>
 
     <form id="uploadForm">
+      <div>
+        <label for="model">选择模型</label>
+        <select id="model" name="model" required>
+          {% for model in models %}
+          <option value="{{ model.id }}" {% if model.id == default_model %}selected{% endif %}>
+            {{ model.display_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
       <div>
         <label for="prompt">提示词</label>
         <textarea id="prompt" name="prompt">{{ default_prompt }}</textarea>

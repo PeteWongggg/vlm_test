@@ -23,6 +23,21 @@ class ModelConfig:
 
 
 @dataclass(frozen=True)
+class OpenRouterModel:
+    name: str
+    display_name: str
+
+
+@dataclass(frozen=True)
+class OpenRouterConfig:
+    enabled: bool
+    api_key: str
+    base_url: str
+    default_sampling_args: Dict[str, Any]
+    models: List[OpenRouterModel]
+
+
+@dataclass(frozen=True)
 class AppMeta:
     title: str
     version: str
@@ -31,6 +46,7 @@ class AppMeta:
 @dataclass(frozen=True)
 class AppConfig:
     model: ModelConfig
+    openrouter: OpenRouterConfig
     app: AppMeta
 
 
@@ -43,7 +59,19 @@ def _load_yaml(path: Path) -> Dict[str, Any]:
 
 def _build_config(data: Dict[str, Any]) -> AppConfig:
     model_section = data.get("model") or {}
+    openrouter_section = data.get("openrouter") or {}
     app_section = data.get("app") or {}
+    
+    # Build OpenRouter models list
+    openrouter_models = []
+    for model_data in openrouter_section.get("models", []):
+        openrouter_models.append(
+            OpenRouterModel(
+                name=model_data.get("name", ""),
+                display_name=model_data.get("display_name", model_data.get("name", "")),
+            )
+        )
+    
     return AppConfig(
         model=ModelConfig(
             name=model_section.get("name", "Qwen3-VL-8B-Instruct"),
@@ -59,6 +87,13 @@ def _build_config(data: Dict[str, Any]) -> AppConfig:
             ),
             sampling_args=model_section.get("sampling_args", {}),
             extra_args=model_section.get("extra_args", {}),
+        ),
+        openrouter=OpenRouterConfig(
+            enabled=openrouter_section.get("enabled", False),
+            api_key=openrouter_section.get("api_key", ""),
+            base_url=openrouter_section.get("base_url", "https://openrouter.ai/api/v1"),
+            default_sampling_args=openrouter_section.get("default_sampling_args", {}),
+            models=openrouter_models,
         ),
         app=AppMeta(
             title=app_section.get("title", "Image-to-Text Demo"),

@@ -10,7 +10,7 @@ import uvicorn
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="启动图生文前端服务")
     parser.add_argument("--host", default="0.0.0.0", help="监听地址 (默认: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8000, help="监听端口 (默认: 8000)")
+    parser.add_argument("--port", type=int, default=8001, help="监听端口 (默认: 8001)")
     parser.add_argument(
         "--reload",
         action="store_true",
